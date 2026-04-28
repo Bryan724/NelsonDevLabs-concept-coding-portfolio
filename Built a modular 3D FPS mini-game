@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NelsonDevLabs FPS Game</title>
+<style>
+  body { margin:0; overflow:hidden; font-family:Arial; background:black; }
+
+  #menu {
+    position:absolute;
+    width:100%;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    background:#000;
+    color:white;
+  }
+
+  #gameUI {
+    display:none;
+  }
+
+  #crosshair {
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    color:white;
+  }
+
+  #hud {
+    position:absolute;
+    bottom:20px;
+    left:20px;
+    color:white;
+  }
+
+  #wave {
+    position:absolute;
+    top:20px;
+    left:20px;
+    color:white;
+  }
+</style>
+</head>
+<body>
+
+<div id="menu">
+  <h1>NelsonDevLabs FPS</h1>
+  <button onclick="startGame()">Start Game</button>
+</div>
+
+<div id="gameUI">
+  <div id="crosshair">+</div>
+  <div id="hud">
+    <div id="hp">HP: 100</div>
+    <div id="ammo">Ammo: 30</div>
+  </div>
+  <div id="wave">Wave: 1</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+// ================= GAME STATE =================
+let gameStarted = false;
+
+function startGame(){
+  document.getElementById("menu").style.display = "none";
+  document.getElementById("gameUI").style.display = "block";
+  gameStarted = true;
+  document.body.requestPointerLock();
+}
+
+// ================= SCENE =================
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b0f19);
+
+const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
+camera.position.set(0,1.6,5);
+
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Lighting
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(5,10,5);
+scene.add(light);
+
+// Floor
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(100,100),
+  new THREE.MeshStandardMaterial({color:0x222222})
+);
+floor.rotation.x = -Math.PI/2;
+scene.add(floor);
+
+// ================= UI =================
+const UI = {
+  hp(v){ document.getElementById("hp").innerText = "HP: " + v; },
+  ammo(v){ document.getElementById("ammo").innerText = "Ammo: " + v; },
+  wave(v){ document.getElementById("wave").innerText = "Wave: " + v; }
+};
+
+// ================= PLAYER =================
+const Player = {
+  hp:100,
+  velY:0,
+  grounded:true,
+
+  damage(d){
+    this.hp -= d;
+    UI.hp(this.hp);
+
+    if(this.hp <= 0){
+      alert("Game Over");
+      location.reload();
+    }
+  },
+
+  update(){
+    this.velY -= 0.01;
+    camera.position.y += this.velY;
+
+    if(camera.position.y <= 1.6){
+      camera.position.y = 1.6;
+      this.velY = 0;
+      this.grounded = true;
+    }
+  }
+};
+
+// ================= WEAPON =================
+const Weapon = {
+  ammo:30,
+  cooldown:0,
+
+  shoot(){
+    if(this.cooldown > 0) return;
+    if(this.ammo <= 0) return;
+
+    this.ammo--;
+    UI.ammo(this.ammo);
+    this.cooldown = 10;
+
+    spawnBullet(camera.position.clone(), getForward());
+  },
+
+  reload(){
+    this.ammo = 30;
+    UI.ammo(this.ammo);
+  },
+
+  update(){
+    if(this.cooldown > 0) this.cooldown--;
+  }
+};
+
+// ================= BULLETS =================
+const bullets = [];
+
+function spawnBullet(pos, dir){
+  const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.1),
+    new THREE.MeshBasicMaterial({color:0xffff00})
+  );
+  mesh.position.copy(pos);
+  scene.add(mesh);
+  bullets.push({mesh, dir});
+}
+
+function updateBullets(){
+  bullets.forEach((b,i)=>{
+    b.mesh.position.add(b.dir.clone().multiplyScalar(0.5));
+
+    enemies.forEach(enemy=>{
+      if(b.mesh.position.distanceTo(enemy.mesh.position) < 1){
+        enemy.hp -= 20;
+        scene.remove(b.mesh);
+        bullets.splice(i,1);
+      }
+    });
+  });
+}
+
+// ================= ENEMY =================
+class Enemy {
+  constructor(x,z){
+    this.mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(1,2,1),
+      new THREE.MeshStandardMaterial({color:0xff0000})
+    );
+    this.mesh.position.set(x,1,z);
+    scene.add(this.mesh);
+    this.hp = 50;
+  }
+
+  update(){
+    const dir = new THREE.Vector3()
+      .subVectors(camera.position, this.mesh.position)
+      .normalize();
+
+    this.mesh.position.add(dir.multiplyScalar(0.02));
+
+    if(this.mesh.position.distanceTo(camera.position) < 2){
+      Player.damage(0.2);
+    }
+  }
+}
+
+let enemies = [];
+
+// ================= WAVES =================
+let wave = 1;
+
+function spawnWave(){
+  enemies = [];
+  for(let i=0;i<wave*2;i++){
+    enemies.push(new Enemy(
+      (Math.random()*20)-10,
+      -Math.random()*20
+    ));
+  }
+  UI.wave(wave);
+}
+
+// ================= CONTROLS =================
+let keys = {};
+
+document.addEventListener("keydown", e=>{
+  keys[e.key] = true;
+  if(e.key === "r") Weapon.reload();
+});
+
+document.addEventListener("keyup", e=> keys[e.key] = false);
+
+document.addEventListener("click", ()=>{
+  if(gameStarted) Weapon.shoot();
+});
+
+// Mouse look
+let yaw=0, pitch=0;
+
+document.addEventListener("mousemove", e=>{
+  if(document.pointerLockElement === document.body){
+    yaw -= e.movementX * 0.002;
+    pitch -= e.movementY * 0.002;
+    pitch = Math.max(-Math.PI/2, Math.min(Math.PI/2, pitch));
+  }
+});
+
+// Movement
+function move(){
+  const forward = new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw));
+  const right = new THREE.Vector3(forward.z,0,-forward.x);
+
+  if(keys["w"]) camera.position.add(forward.clone().multiplyScalar(0.1));
+  if(keys["s"]) camera.position.add(forward.clone().multiplyScalar(-0.1));
+  if(keys["a"]) camera.position.add(right.clone().multiplyScalar(-0.1));
+  if(keys["d"]) camera.position.add(right.clone().multiplyScalar(0.1));
+}
+
+function getForward(){
+  return new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw)).normalize();
+}
+
+// ================= LOOP =================
+function animate(){
+  requestAnimationFrame(animate);
+
+  if(!gameStarted) return;
+
+  move();
+  Player.update();
+  Weapon.update();
+  updateBullets();
+
+  enemies.forEach((enemy,i)=>{
+    enemy.update();
+
+    if(enemy.hp <= 0){
+      scene.remove(enemy.mesh);
+      enemies.splice(i,1);
+    }
+  });
+
+  if(enemies.length === 0){
+    wave++;
+    spawnWave();
+  }
+
+  camera.rotation.order = "YXZ";
+  camera.rotation.y = yaw;
+  camera.rotation.x = pitch;
+
+  renderer.render(scene, camera);
+}
+
+animate();
+
+// init
+UI.hp(Player.hp);
+UI.ammo(Weapon.ammo);
+spawnWave();
+</script>
+
+</body>
+</html>
