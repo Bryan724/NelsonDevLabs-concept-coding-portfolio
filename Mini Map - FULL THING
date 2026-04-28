@@ -1,0 +1,54 @@
+<canvas id="minimap"></canvas>
+
+<style>
+#minimap {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 150px;
+  height: 150px;
+  background: rgba(0,0,0,0.6);
+  border: 2px solid white;
+}
+</style>
+
+const minimap = document.getElementById("minimap");
+const ctx = minimap.getContext("2d");
+
+// map scale (bigger = more zoomed out)
+const mapScale = 5;
+
+function drawMinimap() {
+  ctx.clearRect(0, 0, minimap.width, minimap.height);
+
+  // center of minimap
+  const centerX = minimap.width / 2;
+  const centerY = minimap.height / 2;
+
+  // background grid (optional)
+  ctx.fillStyle = "rgba(50,50,50,0.5)";
+  ctx.fillRect(0, 0, minimap.width, minimap.height);
+
+  // PLAYER (center)
+  ctx.fillStyle = "lime";
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ENEMIES
+  ctx.fillStyle = "red";
+
+  enemies.forEach(enemy => {
+    const dx = enemy.mesh.position.x - camera.position.x;
+    const dz = enemy.mesh.position.z - camera.position.z;
+
+    const x = centerX + dx * mapScale;
+    const y = centerY + dz * mapScale;
+
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+drawMinimap();
