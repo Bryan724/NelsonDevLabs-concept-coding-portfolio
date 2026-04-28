@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NelsonDevLabs FPS System</title>
+<style>
+  body {
+    margin: 0;
+    background: #0b0f19;
+    color: white;
+    font-family: Arial;
+    overflow: hidden;
+  }
+
+  #ui {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+  }
+
+  #ammo {
+    font-size: 24px;
+  }
+
+  #log {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 14px;
+    opacity: 0.8;
+  }
+
+  #crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+  }
+</style>
+</head>
+<body>
+
+<div id="log"></div>
+
+<div id="crosshair">+</div>
+
+<div id="ui">
+  <div id="ammo">Ammo: 30</div>
+</div>
+
+<script>
+class Weapon {
+  constructor() {
+    this.ammo = 30;
+    this.spread = 0;
+  }
+
+  shoot(enemy) {
+    if (this.ammo <= 0) {
+      log("Out of ammo!");
+      playSound("empty");
+      return;
+    }
+
+    this.ammo--;
+    updateAmmo(this.ammo);
+
+    let hitChance = 0.9 - this.spread;
+    let hit = Math.random() < hitChance;
+
+    this.spread += 0.05;
+    if (this.spread > 0.5) this.spread = 0.5;
+
+    playSound("shoot");
+
+    if (hit) {
+      let headshot = Math.random() < 0.2;
+      let dmg = headshot ? 60 : 30;
+
+      log(headshot ? "HEADSHOT 💀" : "HIT 🎯");
+      enemy.takeDamage(dmg);
+    } else {
+      log("MISS ❌");
+    }
+  }
+
+  reload() {
+    this.ammo = 30;
+    this.spread = 0;
+    updateAmmo(this.ammo);
+    log("Reloaded 🔄");
+    playSound("reload");
+  }
+}
+
+class Enemy {
+  constructor(name, hp) {
+    this.name = name;
+    this.hp = hp;
+  }
+
+  takeDamage(dmg) {
+    this.hp -= dmg;
+
+    if (this.hp <= 0) {
+      log(this.name + " eliminated 💀");
+      fakeMultiplayer("Enemy down by player");
+      this.hp = 100;
+    } else {
+      log(this.name + " HP: " + this.hp);
+    }
+  }
+}
+
+class Grenade {
+  explode(enemy) {
+    log("Grenade exploded 💣");
+    playSound("boom");
+    enemy.takeDamage(50);
+  }
+}
+
+// 🔊 Sound system
+function playSound(type) {
+  const sounds = {
+    shoot: "https://actions.google.com/sounds/v1/impacts/wood_plank_flicks.ogg",
+    reload: "https://actions.google.com/sounds/v1/foley/cloth_swipe.ogg",
+    boom: "https://actions.google.com/sounds/v1/explosions/explosion.ogg",
+    empty: "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+  };
+
+  new Audio(sounds[type]).play();
+}
+
+// 🎮 UI
+function updateAmmo(ammo) {
+  document.getElementById("ammo").innerText = "Ammo: " + ammo;
+}
+
+function log(text) {
+  const logBox = document.getElementById("log");
+  logBox.innerText = text;
+}
+
+// 🌐 Fake multiplayer logs
+function fakeMultiplayer(msg) {
+  console.log("[SERVER] Player1:", msg);
+}
+
+// 🕹️ Movement system
+let pos = { x: 0, y: 0 };
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "w") pos.y--;
+  if (e.key === "s") pos.y++;
+  if (e.key === "a") pos.x--;
+  if (e.key === "d") pos.x++;
+
+  console.log("Player position:", pos);
+});
+
+// 🎮 Setup
+const weapon = new Weapon();
+const enemy = new Enemy("Bot", 100);
+const grenade = new Grenade();
+
+// Controls
+document.addEventListener("click", () => weapon.shoot(enemy));
+document.addEventListener("keydown", (e) => {
+  if (e.key === "r") weapon.reload();
+  if (e.key === "g") grenade.explode(enemy);
+});
+</script>
+
+</body>
+</html>
