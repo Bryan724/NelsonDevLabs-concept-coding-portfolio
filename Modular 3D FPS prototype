@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NelsonDevLabs FPS Engine</title>
+<style>
+  body { margin:0; overflow:hidden; background:black; font-family:Arial;}
+  #ui { position:absolute; bottom:20px; left:20px; }
+  #health { font-size:20px; }
+  #ammo { font-size:20px; }
+  #status { position:absolute; top:20px; right:20px; color:red;}
+  #crosshair {
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    font-size:24px;
+    color:white;
+  }
+</style>
+</head>
+<body>
+
+<div id="crosshair">+</div>
+
+<div id="ui">
+  <div id="health">❤️ HP: 100</div>
+  <div id="ammo">🔫 Ammo: 30</div>
+</div>
+
+<div id="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+// ==========================
+// CORE ENGINE
+// ==========================
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+camera.position.set(0,1.6,5);
+
+scene.add(new THREE.HemisphereLight(0xffffff,0x444444));
+
+// Floor
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(100,100),
+  new THREE.MeshBasicMaterial({color:0x111827})
+);
+floor.rotation.x = -Math.PI/2;
+scene.add(floor);
+
+// ==========================
+// UI SYSTEM
+// ==========================
+const UI = {
+  updateHealth(hp){
+    document.getElementById("health").innerText = "❤️ HP: " + hp;
+  },
+  updateAmmo(ammo){
+    document.getElementById("ammo").innerText = "🔫 Ammo: " + ammo;
+  },
+  status(text){
+    document.getElementById("status").innerText = text;
+  }
+};
+
+// ==========================
+// PLAYER SYSTEM
+// ==========================
+const Player = {
+  health:100,
+  speed:0.1,
+
+  damage(amount){
+    this.health -= amount;
+    UI.updateHealth(this.health);
+
+    if(this.health <= 0){
+      UI.status("💀 YOU DIED");
+      setTimeout(()=>{
+        this.health = 100;
+        camera.position.set(0,1.6,5);
+        UI.updateHealth(this.health);
+        UI.status("");
+      },2000);
+    }
+  }
+};
+
+// ==========================
+// WEAPON SYSTEM
+// ==========================
+const Weapon = {
+  ammo:30,
+  spread:0,
+
+  shoot(target){
+    if(this.ammo <= 0){
+      UI.status("Out of ammo!");
+      return;
+    }
+
+    this.ammo--;
+    UI.updateAmmo(this.ammo);
+
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(new THREE.Vector2(0,0), camera);
+
+    const hit = ray.intersectObject(target.mesh);
+
+    if(hit.length > 0){
+      let headshot = Math.random() < 0.2;
+      let dmg = headshot ? 60 : 30;
+      target.takeDamage(dmg);
+      console.log(headshot ? "HEADSHOT 💀" : "HIT 🎯");
+    } else {
+      console.log("MISS ❌");
+    }
+
+    this.spread += 0.05;
+  },
+
+  reload(){
+    this.ammo = 30;
+    this.spread = 0;
+    UI.updateAmmo(this.ammo);
+  }
+};
+
+// ==========================
+// ENEMY SYSTEM
+// ==========================
+class Enemy {
+  constructor(){
+    this.mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(1,2,1),
+      new THREE.MeshBasicMaterial({color:0xff0000})
+    );
+    this.mesh.position.set(0,1,-10);
+    scene.add(this.mesh);
+
+    this.health = 100;
+  }
+
+  update(){
+    let dir = new THREE.Vector3()
+      .subVectors(camera.position, this.mesh.position)
+      .normalize();
+
+    this.mesh.position.add(dir.multiplyScalar(0.02));
+
+    if(this.mesh.position.distanceTo(camera.position) < 2){
+      Player.damage(0.5);
+    }
+  }
+
+  takeDamage(dmg){
+    this.health -= dmg;
+
+    if(this.health <= 0){
+      console.log("Enemy down 💀");
+      this.mesh.position.set(0,1,-10);
+      this.health = 100;
+    }
+  }
+}
+
+const enemy = new Enemy();
+
+// ==========================
+// GRENADE SYSTEM
+// ==========================
+function throwGrenade(){
+  console.log("💣 Grenade!");
+  enemy.takeDamage(50);
+}
+
+// ==========================
+// CONTROLS
+// ==========================
+let keys = {};
+
+document.addEventListener("keydown", e => {
+  keys[e.key] = true;
+
+  if(e.key === "r") Weapon.reload();
+  if(e.key === "g") throwGrenade();
+});
+
+document.addEventListener("keyup", e => keys[e.key] = false);
+
+document.addEventListener("click", () => {
+  document.body.requestPointerLock();
+});
+
+document.addEventListener("mousedown", () => {
+  Weapon.shoot(enemy);
+});
+
+// Mouse look
+let yaw = 0, pitch = 0;
+
+document.addEventListener("mousemove", e => {
+  if(document.pointerLockElement === document.body){
+    yaw -= e.movementX * 0.002;
+    pitch -= e.movementY * 0.002;
+    pitch = Math.max(-Math.PI/2, Math.min(Math.PI/2, pitch));
+  }
+});
+
+// Movement
+function move(){
+  let forward = new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw));
+  let right = new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
+
+  if(keys["w"]) camera.position.add(forward.clone().multiplyScalar(Player.speed));
+  if(keys["s"]) camera.position.add(forward.clone().multiplyScalar(-Player.speed));
+  if(keys["a"]) camera.position.add(right.clone().multiplyScalar(-Player.speed));
+  if(keys["d"]) camera.position.add(right.clone().multiplyScalar(Player.speed));
+}
+
+// ==========================
+// GAME LOOP
+// ==========================
+function animate(){
+  requestAnimationFrame(animate);
+
+  move();
+  enemy.update();
+
+  camera.rotation.order = "YXZ";
+  camera.rotation.y = yaw;
+  camera.rotation.x = pitch;
+
+  renderer.render(scene, camera);
+}
+
+animate();
+
+// Init UI
+UI.updateHealth(Player.health);
+UI.updateAmmo(Weapon.ammo);
+</script>
+
+</body>
+</html>
