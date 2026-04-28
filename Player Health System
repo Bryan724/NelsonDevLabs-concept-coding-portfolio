@@ -1,0 +1,23 @@
+let playerHealth = 100;
+
+function updateHealth() {
+  document.getElementById("health").innerText = "❤️ HP: " + playerHealth;
+}
+
+function damagePlayer(amount) {
+  playerHealth -= amount;
+  updateHealth();
+
+  if (playerHealth <= 0) {
+    playerHealth = 0;
+    document.getElementById("status").innerText = "💀 YOU DIED";
+
+    // Respawn after 2 sec
+    setTimeout(() => {
+      playerHealth = 100;
+      updateHealth();
+      document.getElementById("status").innerText = "";
+      camera.position.set(0, 1.6, 0);
+    }, 2000);
+  }
+}
