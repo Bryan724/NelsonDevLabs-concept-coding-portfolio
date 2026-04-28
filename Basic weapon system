@@ -1,0 +1,32 @@
+class Weapon {
+  constructor(name, damage, ammo, fireRate) {
+    this.name = name;
+    this.damage = damage;
+    this.ammo = ammo;
+    this.fireRate = fireRate;
+  }
+
+  shoot() {
+    if (this.ammo > 0) {
+      this.ammo--;
+      console.log(`${this.name} fired! 💥 Damage: ${this.damage}`);
+    } else {
+      console.log(`${this.name} is out of ammo! 🔄 Reload needed.`);
+    }
+  }
+
+  reload(amount) {
+    this.ammo += amount;
+    console.log(`${this.name} reloaded. Ammo: ${this.ammo}`);
+  }
+}
+
+// Example weapons
+const rifle = new Weapon("XR-92 Rifle", 35, 30, 0.1);
+const pistol = new Weapon("Viper Pistol", 20, 12, 0.3);
+
+// Demo
+rifle.shoot();
+rifle.shoot();
+rifle.reload(10);
+pistol.shoot();
