@@ -1,0 +1,40 @@
+<div id="gameUI">
+
+  <!-- Crosshair -->
+  <div id="crosshair"></div>
+
+  <!-- Bottom HUD -->
+  <div id="hud">
+    <div class="stat">
+      <span>HEALTH</span>
+      <div class="bar"><div id="healthBar"></div></div>
+    </div>
+
+    <div class="stat">
+      <span>AMMO</span>
+      <div id="ammoText">30 / 30</div>
+    </div>
+  </div>
+
+  <!-- Top Info -->
+  <div id="topUI">
+    <div id="waveText">Wave 1</div>
+  </div>
+
+  <!-- Hitmarker -->
+  <div id="hitmarker"></div>
+
+</div>
+
+
+UI.setHealth(Player.hp, 100);
+UI.setAmmo(Weapon.ammo, 30);
+UI.setWave(wave);
+
+
+Player.damage = function(d){
+  this.hp -= d;
+  UI.setHealth(this.hp, 100);
+}
+
+UI.hitmarker();
