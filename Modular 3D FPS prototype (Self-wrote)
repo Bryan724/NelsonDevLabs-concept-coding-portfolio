@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NelsonDevLabs FPS Engine</title>
+<style>
+  body { margin:0; overflow:hidden; font-family:Arial; background:#000; }
+
+  #crosshair {
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    color:white;
+    font-size:20px;
+  }
+
+  #ui {
+    position:absolute;
+    bottom:20px;
+    left:20px;
+    color:white;
+  }
+
+  #status {
+    position:absolute;
+    top:20px;
+    right:20px;
+    color:red;
+  }
+</style>
+</head>
+<body>
+
+<div id="crosshair">+</div>
+
+<div id="ui">
+  <div id="health">HP: 100</div>
+  <div id="ammo">Ammo: 30</div>
+</div>
+
+<div id="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+// ================= ENGINE =================
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b0f19);
+
+const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
+camera.position.set(0,1.6,5);
+
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+scene.add(new THREE.HemisphereLight(0xffffff,0x444444));
+
+// ================= MAP =================
+function createBox(x,y,z,w,h,d,color=0x333333){
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(w,h,d),
+    new THREE.MeshStandardMaterial({color})
+  );
+  mesh.position.set(x,y,z);
+  scene.add(mesh);
+  return mesh;
+}
+
+// floor
+createBox(0,-0.5,0,100,1,100,0x111111);
+
+// cover objects
+createBox(2,1,-5,2,2,2);
+createBox(-3,1,-8,2,2,2);
+
+// ================= UI =================
+const UI = {
+  health(v){ document.getElementById("health").innerText = "HP: " + v; },
+  ammo(v){ document.getElementById("ammo").innerText = "Ammo: " + v; },
+  status(t){ document.getElementById("status").innerText = t; }
+};
+
+// ================= PLAYER =================
+const Player = {
+  hp:100,
+  velY:0,
+  grounded:true,
+  speed:0.1,
+
+  damage(d){
+    this.hp -= d;
+    UI.health(this.hp);
+
+    if(this.hp <= 0){
+      UI.status("YOU DIED");
+      setTimeout(()=>{
+        this.hp = 100;
+        camera.position.set(0,1.6,5);
+        UI.health(this.hp);
+        UI.status("");
+      },2000);
+    }
+  },
+
+  update(){
+    // gravity
+    this.velY -= 0.01;
+    camera.position.y += this.velY;
+
+    if(camera.position.y <= 1.6){
+      camera.position.y = 1.6;
+      this.velY = 0;
+      this.grounded = true;
+    }
+  },
+
+  jump(){
+    if(this.grounded){
+      this.velY = 0.2;
+      this.grounded = false;
+    }
+  }
+};
+
+// ================= WEAPON =================
+const Weapon = {
+  ammo:30,
+  cooldown:0,
+
+  shoot(){
+    if(this.cooldown > 0) return;
+    if(this.ammo <= 0){
+      UI.status("No ammo");
+      return;
+    }
+
+    this.ammo--;
+    UI.ammo(this.ammo);
+
+    this.cooldown = 10;
+
+    spawnBullet(camera.position.clone(), getForward());
+  },
+
+  reload(){
+    this.ammo = 30;
+    UI.ammo(this.ammo);
+  },
+
+  update(){
+    if(this.cooldown > 0) this.cooldown--;
+  }
+};
+
+// ================= BULLETS =================
+const bullets = [];
+
+function spawnBullet(pos, dir){
+  const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.1),
+    new THREE.MeshBasicMaterial({color:0xffff00})
+  );
+
+  mesh.position.copy(pos);
+  scene.add(mesh);
+
+  bullets.push({mesh, dir});
+}
+
+function updateBullets(){
+  bullets.forEach((b,i)=>{
+    b.mesh.position.add(b.dir.clone().multiplyScalar(0.5));
+
+    if(b.mesh.position.distanceTo(enemy.mesh.position) < 1){
+      enemy.damage(20);
+      scene.remove(b.mesh);
+      bullets.splice(i,1);
+    }
+  });
+}
+
+// ================= ENEMY =================
+const enemy = {
+  mesh:createBox(0,1,-10,1,2,1,0xff0000),
+  hp:100,
+  shootCooldown:0,
+
+  update(){
+    // chase player
+    const dir = new THREE.Vector3()
+      .subVectors(camera.position, this.mesh.position)
+      .normalize();
+
+    this.mesh.position.add(dir.multiplyScalar(0.02));
+
+    // shoot player
+    if(this.shootCooldown <= 0){
+      spawnEnemyBullet(this.mesh.position.clone(), dir);
+      this.shootCooldown = 60;
+    } else {
+      this.shootCooldown--;
+    }
+  },
+
+  damage(d){
+    this.hp -= d;
+    if(this.hp <= 0){
+      this.hp = 100;
+      this.mesh.position.set(0,1,-10);
+    }
+  }
+};
+
+// enemy bullets
+const enemyBullets = [];
+
+function spawnEnemyBullet(pos, dir){
+  const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.1),
+    new THREE.MeshBasicMaterial({color:0xff0000})
+  );
+
+  mesh.position.copy(pos);
+  scene.add(mesh);
+
+  enemyBullets.push({mesh, dir});
+}
+
+function updateEnemyBullets(){
+  enemyBullets.forEach((b,i)=>{
+    b.mesh.position.add(b.dir.clone().multiplyScalar(0.3));
+
+    if(b.mesh.position.distanceTo(camera.position) < 1){
+      Player.damage(5);
+      scene.remove(b.mesh);
+      enemyBullets.splice(i,1);
+    }
+  });
+}
+
+// ================= CONTROLS =================
+let keys = {};
+
+document.addEventListener("keydown", e=>{
+  keys[e.key] = true;
+
+  if(e.key === "r") Weapon.reload();
+  if(e.key === " ") Player.jump();
+});
+
+document.addEventListener("keyup", e=> keys[e.key] = false);
+
+document.addEventListener("click", ()=>{
+  document.body.requestPointerLock();
+  Weapon.shoot();
+});
+
+let yaw=0, pitch=0;
+
+document.addEventListener("mousemove", e=>{
+  if(document.pointerLockElement === document.body){
+    yaw -= e.movementX * 0.002;
+    pitch -= e.movementY * 0.002;
+    pitch = Math.max(-Math.PI/2, Math.min(Math.PI/2, pitch));
+  }
+});
+
+// ================= HELPERS =================
+function getForward(){
+  return new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw)).normalize();
+}
+
+// ================= MOVEMENT =================
+function move(){
+  const forward = getForward();
+  const right = new THREE.Vector3(forward.z,0,-forward.x);
+
+  if(keys["w"]) camera.position.add(forward.clone().multiplyScalar(Player.speed));
+  if(keys["s"]) camera.position.add(forward.clone().multiplyScalar(-Player.speed));
+  if(keys["a"]) camera.position.add(right.clone().multiplyScalar(-Player.speed));
+  if(keys["d"]) camera.position.add(right.clone().multiplyScalar(Player.speed));
+}
+
+// ================= LOOP =================
+function animate(){
+  requestAnimationFrame(animate);
+
+  move();
+  Player.update();
+  Weapon.update();
+
+  updateBullets();
+  updateEnemyBullets();
+
+  enemy.update();
+
+  camera.rotation.order = "YXZ";
+  camera.rotation.y = yaw;
+  camera.rotation.x = pitch;
+
+  renderer.render(scene, camera);
+}
+
+animate();
+
+UI.health(Player.hp);
+UI.ammo(Weapon.ammo);
+</script>
+</body>
+</html>
