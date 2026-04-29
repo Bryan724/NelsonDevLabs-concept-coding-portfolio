@@ -78,10 +78,10 @@ class Weapon {
       let headshot = Math.random() < 0.2;
       let dmg = headshot ? 60 : 30;
 
-      log(headshot ? "HEADSHOT 💀" : "HIT 🎯");
+      log(headshot ? "HEADSHOT" : "HIT");
       enemy.takeDamage(dmg);
     } else {
-      log("MISS ❌");
+      log("MISS");
     }
   }
 
@@ -89,7 +89,7 @@ class Weapon {
     this.ammo = 30;
     this.spread = 0;
     updateAmmo(this.ammo);
-    log("Reloaded 🔄");
+    log("Reloaded");
     playSound("reload");
   }
 }
@@ -104,7 +104,7 @@ class Enemy {
     this.hp -= dmg;
 
     if (this.hp <= 0) {
-      log(this.name + " eliminated 💀");
+      log(this.name + " eliminated");
       fakeMultiplayer("Enemy down by player");
       this.hp = 100;
     } else {
@@ -115,13 +115,13 @@ class Enemy {
 
 class Grenade {
   explode(enemy) {
-    log("Grenade exploded 💣");
+    log("Grenade exploded");
     playSound("boom");
     enemy.takeDamage(50);
   }
 }
 
-// 🔊 Sound system
+// Sound system
 function playSound(type) {
   const sounds = {
     shoot: "https://actions.google.com/sounds/v1/impacts/wood_plank_flicks.ogg",
@@ -133,7 +133,7 @@ function playSound(type) {
   new Audio(sounds[type]).play();
 }
 
-// 🎮 UI
+// UI
 function updateAmmo(ammo) {
   document.getElementById("ammo").innerText = "Ammo: " + ammo;
 }
@@ -143,12 +143,12 @@ function log(text) {
   logBox.innerText = text;
 }
 
-// 🌐 Fake multiplayer logs
+// Fake multiplayer logs
 function fakeMultiplayer(msg) {
   console.log("[SERVER] Player1:", msg);
 }
 
-// 🕹️ Movement system
+// Movement system
 let pos = { x: 0, y: 0 };
 
 document.addEventListener("keydown", (e) => {
@@ -160,7 +160,7 @@ document.addEventListener("keydown", (e) => {
   console.log("Player position:", pos);
 });
 
-// 🎮 Setup
+// Setup
 const weapon = new Weapon();
 const enemy = new Enemy("Bot", 100);
 const grenade = new Grenade();
