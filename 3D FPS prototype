@@ -95,15 +95,15 @@ function shoot() {
 
     enemyHealth -= damage;
 
-    console.log(isHeadshot ? "HEADSHOT 💀" : "HIT 🎯");
+    console.log(isHeadshot ? "HEADSHOT" : "HIT");
 
     if (enemyHealth <= 0) {
-      console.log("Enemy eliminated 💀");
+      console.log("Enemy eliminated");
       enemy.position.z = -10;
       enemyHealth = 100;
     }
   } else {
-    console.log("MISS ❌");
+    console.log("MISS");
   }
 }
 
