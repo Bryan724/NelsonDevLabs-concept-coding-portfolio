@@ -1,0 +1,452 @@
+StarterGui
+ └── ScreenGui (rename: MainMenu)
+      ├── MainFrame
+      │     ├── Title
+      │     ├── StartButton
+      │     ├── LoadoutButton
+      │     ├── SettingsButton
+      │
+      ├── LoadoutFrame
+      │     ├── BackButton
+      │     ├── RifleButton
+      │     ├── SMGButton
+      │
+      └── SettingsFrame
+            ├── BackButton
+End)
+-- References
+local menu = script.Parent
+local main = menu.MainFrame
+local loadout = menu.LoadoutFrame
+local settings = menu.SettingsFrame
+
+-- Buttons
+local startBtn = main.StartButton
+local loadoutBtn = main.LoadoutButton
+local settingsBtn = main.SettingsButton
+
+local backLoadout = loadout.BackButton
+local backSettings = settings.BackButton
+
+-- Example weapon selection
+local rifleBtn = loadout.RifleButton
+local smgBtn = loadout.SMGButton
+
+local selectedWeapon = "Rifle"
+
+-- =========================
+-- MENU NAVIGATION
+-- =========================
+
+startBtn.MouseButton1Click:Connect(function()
+    menu.Enabled = false -- hides menu
+end)
+
+loadoutBtn.MouseButton1Click:Connect(function()
+    main.Visible = false
+    loadout.Visible = true
+end)
+
+settingsBtn.MouseButton1Click:Connect(function()
+    main.Visible = false
+    settings.Visible = true
+end)
+
+backLoadout.MouseButton1Click:Connect(function()
+    loadout.Visible = false
+    main.Visible = true
+end)
+
+backSettings.MouseButton1Click:Connect(function()
+    settings.Visible = false
+    main.Visible = true
+end)
+
+-- =========================
+-- LOADOUT SYSTEM
+-- =========================
+
+rifleBtn.MouseButton1Click:Connect(function()
+    selectedWeapon = "Rifle"
+    print("Selected Rifle")
+end)
+
+smgBtn.MouseButton1Click:Connect(function()
+    selectedWeapon = "SMG"
+    print("Selected SMG")
+end)
+
+local btn = script.Parent
+
+btn.MouseEnter:Connect(function()
+    btn.BackgroundColor3 = Color3.fromRGB(30, 100, 255)
+end)
+
+btn.MouseLeave:Connect(function()
+    btn.BackgroundColor3 = Color3.fromRGB(40, 80, 200)
+end)
+
+ScreenGui (MainMenu)
+ ├── Pages
+ │    ├── MainFrame
+ │    ├── LoadoutFrame
+ │    └── SettingsFrame
+ │
+ ├── Sounds
+ │    ├── Hover
+ │    ├── Click
+ │
+ ├── UIController (LocalScript)
+
+end)
+
+local menu = script.Parent
+local pages = menu.Pages
+
+local main = pages.MainFrame
+local loadout = pages.LoadoutFrame
+local settings = pages.SettingsFrame
+
+local TweenService = game:GetService("TweenService")
+local player = game.Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+-- Sounds
+local hoverSound = menu.Sounds.Hover
+local clickSound = menu.Sounds.Click
+
+-- SETTINGS
+local sensitivity = 0.2
+
+-- =========================
+-- ANIMATION FUNCTION
+-- =========================
+local function showFrame(frame)
+    for _,f in pairs(pages:GetChildren()) do
+        if f:IsA("Frame") then
+            f.Visible = false
+        end
+    end
+
+    frame.Position = UDim2.new(0.5,0,1.2,0)
+    frame.Visible = true
+
+    TweenService:Create(frame, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
+        Position = UDim2.new(0.5,0,0.5,0)
+    }):Play()
+end
+
+-- =========================
+-- BUTTON SETUP FUNCTION
+-- =========================
+local function setupButton(btn)
+    btn.MouseEnter:Connect(function()
+        hoverSound:Play()
+        TweenService:Create(btn, TweenInfo.new(0.15), {
+            BackgroundColor3 = Color3.fromRGB(60,120,255)
+        }):Play()
+    end)
+
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {
+            BackgroundColor3 = Color3.fromRGB(40,80,200)
+        }):Play()
+    end)
+
+    btn.MouseButton1Click:Connect(function()
+        clickSound:Play()
+    end)
+end
+
+-- =========================
+-- MAIN BUTTONS
+-- =========================
+local mainButtons = {
+    main.StartButton,
+    main.LoadoutButton,
+    main.SettingsButton
+}
+
+for _,btn in pairs(mainButtons) do
+    setupButton(btn)
+end
+
+-- Navigation
+main.StartButton.MouseButton1Click:Connect(function()
+    menu.Enabled = false
+end)
+
+main.LoadoutButton.MouseButton1Click:Connect(function()
+    showFrame(loadout)
+end)
+
+main.SettingsButton.MouseButton1Click:Connect(function()
+    showFrame(settings)
+end)
+
+-- =========================
+-- LOADOUT SYSTEM
+-- =========================
+local selectedWeapon = "Rifle"
+
+setupButton(loadout.RifleButton)
+setupButton(loadout.SMGButton)
+setupButton(loadout.BackButton)
+
+loadout.RifleButton.MouseButton1Click:Connect(function()
+    selectedWeapon = "Rifle"
+end)
+
+loadout.SMGButton.MouseButton1Click:Connect(function()
+    selectedWeapon = "SMG"
+end)
+
+loadout.BackButton.MouseButton1Click:Connect(function()
+    showFrame(main)
+end)
+
+-- Give weapon when game starts
+player.CharacterAdded:Connect(function(char)
+    local backpack = player:WaitForChild("Backpack")
+
+    if selectedWeapon == "Rifle" then
+        game.ReplicatedStorage.Rifle:Clone().Parent = backpack
+    elseif selectedWeapon == "SMG" then
+        game.ReplicatedStorage.SMG:Clone().Parent = backpack
+    end
+end)
+
+-- =========================
+-- SETTINGS SYSTEM
+-- =========================
+setupButton(settings.BackButton)
+
+settings.BackButton.MouseButton1Click:Connect(function()
+    showFrame(main)
+end)
+
+-- Example: FOV slider
+settings.FOVSlider.MouseButton1Click:Connect(function()
+    camera.FieldOfView = 90
+end)
+
+-- Example: sensitivity change
+settings.LowSens.MouseButton1Click:Connect(function()
+    sensitivity = 0.1
+end)
+
+settings.HighSens.MouseButton1Click:Connect(function()
+    sensitivity = 0.3
+end)
+
+ScreenGui (MainMenu)
+ ├── Blur (BlurEffect)
+ ├── Pages
+ │    ├── MainFrame
+ │    ├── LoadoutFrame
+ │    └── SettingsFrame
+ │
+ ├── Sounds
+ │    ├── Hover
+ │    ├── Click
+ │
+ └── UIController (LocalScript)
+end)
+
+Rifle (Tool)
+SMG (Tool)
+RemoteEvent (SaveSettings)
+
+end)
+DataHandler (Script)
+end)
+
+local DataStoreService = game:GetService("DataStoreService")
+local Players = game:GetService("Players")
+
+local dataStore = DataStoreService:GetDataStore("PlayerData")
+
+local function loadData(player)
+    local data
+    local success, err = pcall(function()
+        data = dataStore:GetAsync(player.UserId)
+    end)
+
+    if not success or not data then
+        data = {
+            weapon = "Rifle",
+            fov = 70,
+            sensitivity = 0.2
+        }
+    end
+
+    return data
+end
+
+local function saveData(player, data)
+    pcall(function()
+        dataStore:SetAsync(player.UserId, data)
+    end)
+end
+
+Players.PlayerAdded:Connect(function(player)
+    local data = loadData(player)
+
+    player:SetAttribute("Weapon", data.weapon)
+    player:SetAttribute("FOV", data.fov)
+    player:SetAttribute("Sensitivity", data.sensitivity)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    local data = {
+        weapon = player:GetAttribute("Weapon"),
+        fov = player:GetAttribute("FOV"),
+        sensitivity = player:GetAttribute("Sensitivity")
+    }
+
+    saveData(player, data)
+end)
+
+local menu = script.Parent
+local pages = menu.Pages
+
+local main = pages.MainFrame
+local loadout = pages.LoadoutFrame
+local settings = pages.SettingsFrame
+
+local TweenService = game:GetService("TweenService")
+local player = game.Players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+local hover = menu.Sounds.Hover
+local click = menu.Sounds.Click
+
+-- =========================
+-- ANIMATIONS
+-- =========================
+local function show(frame)
+    for _,f in pairs(pages:GetChildren()) do
+        if f:IsA("Frame") then
+            f.Visible = false
+        end
+    end
+
+    frame.Position = UDim2.new(0.5,0,1.2,0)
+    frame.Visible = true
+
+    TweenService:Create(frame, TweenInfo.new(0.35), {
+        Position = UDim2.new(0.5,0,0.5,0)
+    }):Play()
+end
+
+-- =========================
+-- BUTTON EFFECTS
+-- =========================
+local function setup(btn)
+    btn.MouseEnter:Connect(function()
+        hover:Play()
+        TweenService:Create(btn, TweenInfo.new(0.1), {
+            BackgroundColor3 = Color3.fromRGB(60,120,255)
+        }):Play()
+    end)
+
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.1), {
+            BackgroundColor3 = Color3.fromRGB(40,80,200)
+        }):Play()
+    end)
+
+    btn.MouseButton1Click:Connect(function()
+        click:Play()
+    end)
+end
+
+-- Apply to all buttons
+for _,btn in pairs(menu:GetDescendants()) do
+    if btn:IsA("TextButton") then
+        setup(btn)
+    end
+end
+
+-- =========================
+-- MAIN NAVIGATION
+-- =========================
+main.StartButton.MouseButton1Click:Connect(function()
+    menu.Enabled = false
+    workspace.CurrentCamera.FieldOfView = player:GetAttribute("FOV") or 70
+end)
+
+main.LoadoutButton.MouseButton1Click:Connect(function()
+    show(loadout)
+end)
+
+main.SettingsButton.MouseButton1Click:Connect(function()
+    show(settings)
+end)
+
+-- =========================
+-- LOADOUT
+-- =========================
+loadout.RifleButton.MouseButton1Click:Connect(function()
+    player:SetAttribute("Weapon", "Rifle")
+end)
+
+loadout.SMGButton.MouseButton1Click:Connect(function()
+    player:SetAttribute("Weapon", "SMG")
+end)
+
+loadout.BackButton.MouseButton1Click:Connect(function()
+    show(main)
+end)
+
+-- Give weapon
+player.CharacterAdded:Connect(function(char)
+    local backpack = player:WaitForChild("Backpack")
+
+    local weapon = player:GetAttribute("Weapon") or "Rifle"
+
+    if game.ReplicatedStorage:FindFirstChild(weapon) then
+        game.ReplicatedStorage[weapon]:Clone().Parent = backpack
+    end
+end)
+
+-- =========================
+-- SETTINGS
+-- =========================
+settings.BackButton.MouseButton1Click:Connect(function()
+    show(main)
+end)
+
+settings.FOV70.MouseButton1Click:Connect(function()
+    player:SetAttribute("FOV", 70)
+    camera.FieldOfView = 70
+end)
+
+settings.FOV90.MouseButton1Click:Connect(function()
+    player:SetAttribute("FOV", 90)
+    camera.FieldOfView = 90
+end)
+
+settings.LowSens.MouseButton1Click:Connect(function()
+    player:SetAttribute("Sensitivity", 0.1)
+end)
+
+settings.HighSens.MouseButton1Click:Connect(function()
+    player:SetAttribute("Sensitivity", 0.3)
+end)
+
+BlurEffect
+ Size = 20
+local blur = game.Lighting:FindFirstChildOfClass("BlurEffect")
+
+menu:GetPropertyChangedSignal("Enabled"):Connect(function()
+    blur.Size = menu.Enabled and 20 or 0
+end)
+
+
+
+
+
+
+
+
