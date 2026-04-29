@@ -9,9 +9,9 @@ class Weapon {
   shoot() {
     if (this.ammo > 0) {
       this.ammo--;
-      console.log(`${this.name} fired! 💥 Damage: ${this.damage}`);
+      console.log(`${this.name} fired! Damage: ${this.damage}`);
     } else {
-      console.log(`${this.name} is out of ammo! 🔄 Reload needed.`);
+      console.log(`${this.name} is out of ammo! Reload needed.`);
     }
   }
 
