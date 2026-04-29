@@ -23,8 +23,8 @@
 <div id="crosshair">+</div>
 
 <div id="ui">
-  <div id="health">❤️ HP: 100</div>
-  <div id="ammo">🔫 Ammo: 30</div>
+  <div id="health"> HP: 100</div>
+  <div id="ammo"> Ammo: 30</div>
 </div>
 
 <div id="status"></div>
@@ -58,10 +58,10 @@ scene.add(floor);
 // ==========================
 const UI = {
   updateHealth(hp){
-    document.getElementById("health").innerText = "❤️ HP: " + hp;
+    document.getElementById("health").innerText = "HP: " + hp;
   },
   updateAmmo(ammo){
-    document.getElementById("ammo").innerText = "🔫 Ammo: " + ammo;
+    document.getElementById("ammo").innerText = "Ammo: " + ammo;
   },
   status(text){
     document.getElementById("status").innerText = text;
@@ -80,7 +80,7 @@ const Player = {
     UI.updateHealth(this.health);
 
     if(this.health <= 0){
-      UI.status("💀 YOU DIED");
+      UI.status("YOU DIED");
       setTimeout(()=>{
         this.health = 100;
         camera.position.set(0,1.6,5);
@@ -116,9 +116,9 @@ const Weapon = {
       let headshot = Math.random() < 0.2;
       let dmg = headshot ? 60 : 30;
       target.takeDamage(dmg);
-      console.log(headshot ? "HEADSHOT 💀" : "HIT 🎯");
+      console.log(headshot ? "HEADSHOT" : "HIT");
     } else {
-      console.log("MISS ❌");
+      console.log("MISS");
     }
 
     this.spread += 0.05;
@@ -162,7 +162,7 @@ class Enemy {
     this.health -= dmg;
 
     if(this.health <= 0){
-      console.log("Enemy down 💀");
+      console.log("Enemy down");
       this.mesh.position.set(0,1,-10);
       this.health = 100;
     }
@@ -175,7 +175,7 @@ const enemy = new Enemy();
 // GRENADE SYSTEM
 // ==========================
 function throwGrenade(){
-  console.log("💣 Grenade!");
+  console.log("Grenade!");
   enemy.takeDamage(50);
 }
 
