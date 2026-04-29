@@ -5,6 +5,7 @@ function enemyAttack() {
     damagePlayer(1); // small damage over time
   }
 }
-
 // Run enemy attack loop
 setInterval(enemyAttack, 200);
+}
+  }
