@@ -1,4 +1,4 @@
-<div id="health">❤️ HP: 100</div>
+<div id="health">HP: 100</div>
 <div id="status"></div>
 
 <style>
