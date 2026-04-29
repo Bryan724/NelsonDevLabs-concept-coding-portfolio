@@ -11,7 +11,7 @@ class Weapon {
 
   shoot() {
     if (this.ammo <= 0) {
-      console.log(`${this.name} is out of ammo! 🔄`);
+      console.log(`${this.name} is out of ammo!`);
       return;
     }
 
@@ -26,14 +26,14 @@ class Weapon {
     if (this.currentSpread > 0.5) this.currentSpread = 0.5;
 
     console.log(
-      `${this.name} fired! 💥 ${hit ? "HIT 🎯" : "MISS ❌"} | Ammo: ${this.ammo}`
+      `${this.name} fired! ${hit ? "HIT" : "MISS"} | Ammo: ${this.ammo}`
     );
   }
 
   reload(amount) {
     this.ammo += amount;
     this.currentSpread = 0;
-    console.log(`${this.name} reloaded 🔄 Ammo: ${this.ammo}`);
+    console.log(`${this.name} reloaded Ammo: ${this.ammo}`);
   }
 
   resetSpread() {
@@ -41,7 +41,7 @@ class Weapon {
   }
 }
 
-// 💣 Ability system
+// Ability system
 class Grenade {
   constructor(damage, radius) {
     this.damage = damage;
@@ -49,19 +49,19 @@ class Grenade {
   }
 
   throw() {
-    console.log(`Grenade thrown! 💣 Explosion radius: ${this.radius}m`);
-    console.log(`BOOM 💥 Deals ${this.damage} damage`);
+    console.log(`Grenade thrown! Explosion radius: ${this.radius}m`);
+    console.log(`BOOM Deals ${this.damage} damage`);
   }
 }
 
-// 🔫 Example weapons
+// Example weapons
 const rifle = new Weapon("XR-92 Rifle", 35, 30, 0.1, 0.05, 0.9);
 const smg = new Weapon("Rapid SMG", 20, 40, 0.05, 0.08, 0.8);
 
-// 💣 Grenade
+// Grenade
 const frag = new Grenade(100, 5);
 
-// 🎮 Demo
+// Demo
 rifle.shoot();
 rifle.shoot();
 rifle.resetSpread();
