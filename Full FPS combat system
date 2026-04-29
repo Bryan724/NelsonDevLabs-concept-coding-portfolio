@@ -31,14 +31,14 @@ class Weapon {
 
       if (isHeadshot) {
         finalDamage *= this.critMultiplier;
-        UI.hitMarker("HEADSHOT 💀");
+        UI.hitMarker("HEADSHOT");
       } else {
-        UI.hitMarker("HIT 🎯");
+        UI.hitMarker("HIT");
       }
 
       target.takeDamage(finalDamage);
     } else {
-      UI.hitMarker("MISS ❌");
+      UI.hitMarker("MISS");
     }
 
     UI.updateAmmo(this.ammo);
@@ -51,7 +51,7 @@ class Weapon {
   }
 }
 
-// 🧠 Enemy AI
+// Enemy AI
 class Enemy {
   constructor(name, health) {
     this.name = name;
@@ -69,7 +69,7 @@ class Enemy {
   }
 }
 
-// 💣 Grenade ability
+// Grenade ability
 class Grenade {
   constructor(damage, radius) {
     this.damage = damage;
@@ -85,44 +85,44 @@ class Grenade {
   }
 }
 
-// 🎮 UI System (console-based for demo)
+// UI System (console-based for demo)
 const UI = {
   updateAmmo: (ammo) => {
-    console.log(`🔫 Ammo: ${ammo}`);
+    console.log(`Ammo: ${ammo}`);
   },
 
   hitMarker: (type) => {
-    console.log(`🎯 ${type}`);
+    console.log(`${type}`);
   },
 
   reload: (weapon, ammo) => {
-    console.log(`🔄 ${weapon} reloaded | Ammo: ${ammo}`);
+    console.log(`${weapon} reloaded | Ammo: ${ammo}`);
   },
 
   outOfAmmo: (weapon) => {
-    console.log(`❌ ${weapon} is out of ammo!`);
+    console.log(`${weapon} is out of ammo!`);
   },
 
   enemyHit: (name, hp) => {
-    console.log(`🧠 ${name} hit! HP left: ${hp}`);
+    console.log(`${name} hit! HP left: ${hp}`);
   },
 
   enemyDown: (name) => {
-    console.log(`💀 ${name} eliminated`);
+    console.log(`${name} eliminated`);
   },
 
   grenade: () => {
-    console.log(`💣 Grenade exploded!`);
+    console.log(`Grenade exploded!`);
   }
 };
 
-// 🎮 Demo Setup
+// Demo Setup
 const rifle = new Weapon("XR-92 Rifle", 30, 10, 0.05, 0.9, 2);
 const enemy1 = new Enemy("Target Dummy", 100);
 const enemy2 = new Enemy("Bot Soldier", 120);
 const frag = new Grenade(50, 5);
 
-// 🔥 Demo Gameplay
+// Demo Gameplay
 rifle.shoot(enemy1);
 rifle.shoot(enemy1);
 rifle.shoot(enemy2);
